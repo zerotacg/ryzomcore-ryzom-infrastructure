@@ -1,0 +1,25 @@
+services:
+  nelns:
+    image: "ghcr.io/zerotacg/ryzomcore-nelns:latest"
+    volumes:
+      - ./config/nelns:/app/config
+    command:
+      - "-Cconfig"
+      - "-Llogs"
+
+  tools:
+    image: "ghcr.io/zerotacg/ryzomcore-tools:latest"
+    volumes:
+      - ./config/tools:/app/config
+      - ./data:/app/data
+    entrypoint: "/usr/bin/env"
+    command: bash
+
+  ryzom:
+    image: "ghcr.io/zerotacg/ryzomcore-tools:latest"
+    volumes:
+      - ./config/ryzom:/app/config
+      - ./data:/app/data
+    command:
+      - "-Cconfig"
+      - "-Llogs"

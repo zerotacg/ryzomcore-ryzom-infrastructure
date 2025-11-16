@@ -1,0 +1,165 @@
+services:
+  naming-service:
+    extends:
+      file: common.yml
+      service: ryzom
+    entrypoint: ryzom_naming_service
+    expose:
+      - 50000
+
+  login-service:
+    extends:
+      file: common.yml
+      service: nelns
+    expose:
+      - 43999
+    ports:
+      - "43999:43999"
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: login_service
+    command:
+      - "-Cconfig"
+      - "-Llogs"
+      - "-P43999"
+
+
+#  admin-service:
+#    extends:
+#      file: common.yml
+#      service: ryzom
+#    entrypoint: ryzom_admin_service
+#    expose:
+#      - 49996
+#    depends_on:
+#      db:
+#        condition: service_healthy
+
+  backup-master:
+    extends:
+      file: common.yml
+      service: ryzom
+    expose:
+      - 43990
+    entrypoint: ryzom_backup_service
+    depends_on:
+      naming-service:
+        condition: service_started
+
+  backup-slave:
+    extends:
+      file: common.yml
+      service: ryzom
+    volumes:
+      - ./config/ryzom/backup_slave_service.cfg:/app/config/backup_service.cfg
+    entrypoint: ryzom_backup_service
+    depends_on:
+      naming-service:
+        condition: service_started
+
+  shard-unifier-service:
+    extends:
+      file: common.yml
+      service: ryzom
+    expose:
+      - 43505
+    entrypoint: ryzom_shard_unifier_service
+    depends_on:
+      naming-service:
+        condition: service_started
+
+  entities-game-service:
+    extends:
+      file: common.yml
+      service: ryzom
+    entrypoint: ryzom_entities_game_service
+    volumes:
+      - ./persistence:/app/pds
+    depends_on:
+      naming-service:
+        condition: service_started
+
+  frontend-service:
+    extends:
+      file: common.yml
+      service: ryzom
+    expose:
+      - 47851
+    entrypoint: ryzom_frontend_service
+    depends_on:
+      naming-service:
+        condition: service_started
+
+  gpm-service:
+    extends:
+      file: common.yml
+      service: ryzom
+    entrypoint: ryzom_gpm_service
+    depends_on:
+      naming-service:
+        condition: service_started
+
+  persistent-data-service:
+    extends:
+      file: common.yml
+      service: ryzom
+    entrypoint: ryzom_persistant_data_service
+    depends_on:
+      naming-service:
+        condition: service_started
+
+  monitor-service:
+    extends:
+      file: common.yml
+      service: ryzom
+    entrypoint: ryzom_monitor_service
+    depends_on:
+      naming-service:
+        condition: service_started
+
+  welcome-service:
+    extends:
+      file: common.yml
+      service: ryzom
+    entrypoint: ryzom_welcome_service
+    depends_on:
+      naming-service:
+        condition: service_started
+
+
+  tools:
+    extends:
+      file: common.yml
+      service: tools
+    entrypoint: /usr/bin/env
+    command: bash
+
+  web:
+    image: "ryzomcore/web"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/web:/var/www/html/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    environment:
+      MARIADB_ROOT_PASSWORD: ryzom
+      MARIADB_USER: ryzom
+      MARIADB_PASSWORD: ryzom
+      MARIADB_DATABASE: ryzom
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+

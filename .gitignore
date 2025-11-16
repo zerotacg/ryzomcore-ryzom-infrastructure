@@ -1,0 +1,10 @@
+.idea/*
+!.idea/externalDependencies.xml
+
+build/
+
+data/*
+
+db/*
+
+persistence/*
