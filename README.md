@@ -20,12 +20,21 @@ start docker containers
 docker compose up
 ```
 
-update shard to `ryzom_live` application
+update shard to `ryzom_dev` application
 
 ```sql
 update shard
-set ClientApplication = 'ryzom_live'
+set ClientApplication = 'ryzom_dev'
 where ShardId = '500';
+```
+
+update domain configuration
+
+```sql
+use nel;
+update domain
+set login_address = 'login-service:43999'
+where domain_name = 'ryzom_dev';
 ```
 
 ## cleanup
@@ -37,6 +46,7 @@ docker compose down --volumes --remove-orphans
 ## TODO
 
 - [ ] Fix php errors on login
+- [ ] Fix error on new address for welcome service
 
 ## required data
 

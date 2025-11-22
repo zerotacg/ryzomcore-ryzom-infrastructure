@@ -75,7 +75,7 @@ services:
       service: ryzom
     entrypoint: ryzom_entities_game_service
     volumes:
-      - ./persistence:/app/pds
+      - ./persistence/egs:/app/pds
     depends_on:
       naming-service:
         condition: service_started
@@ -126,6 +126,8 @@ services:
     depends_on:
       naming-service:
         condition: service_started
+      login-service:
+        condition: service_started
 
 
   tools:
@@ -140,7 +142,14 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./data/web:/var/www/html/data
+      - ./persistence/web:/var/www/html/data
+      #- ./logs/web:/var/www/html/public/login/logs
+    tmpfs:
+      - "/var/www/html/public/admin/graphs_output:uid=33,gid=33"
+      - "/var/www/html/public/admin/templates/default_c:uid=33,gid=33"
+      - "/var/www/html/public/ams/cache:uid=33,gid=33"
+      - "/var/www/html/public/ams/templates_c:uid=33,gid=33"
+
     depends_on:
       db:
         condition: service_healthy
